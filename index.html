@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Controle Financeiro Pessoal</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+    margin: 0; padding: 0;
+    display: flex; justify-content: center; align-items: flex-start;
+    min-height: 100vh;
+  }
+  .container {
+    background: white;
+    margin: 40px;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgb(0 0 0 / 0.1);
+    max-width: 400px;
+    width: 100%;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #333;
+  }
+  label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 5px;
+  }
+  input, select {
+    width: 100%;
+    padding: 7px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  button {
+    margin-top: 15px;
+    width: 100%;
+    padding: 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #0056b3;
+  }
+  .summary {
+    margin-top: 20px;
+    font-size: 18px;
+  }
+  .transactions {
+    margin-top: 20px;
+    max-height: 150px;
+    overflow-y: auto;
+    border-top: 1px solid #ddd;
+  }
+  .transaction {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+  }
+  .income {
+    color: green;
+  }
+  .expense {
+    color: red;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Controle Financeiro</h1>
+
+  <label for="desc">Descrição</label>
+  <input type="text" id="desc" placeholder="Ex: Salário, Mercado..." />
+
+  <label for="amount">Valor (positivo ou negativo)</label>
+  <input type="number" id="amount" placeholder="Ex: 1000 ou -200" />
+
+  <button onclick="addTransaction()">Adicionar</button>
+
+  <div class="summary">
+    <p>Saldo: R$ <span id="balance">0.00</span></p>
+    <p>Receitas: R$ <span id="income">0.00</span></p>
+    <p>Despesas: R$ <span id="expense">0.00</span></p>
+  </div>
+
+  <div class="transactions" id="transactions"></div>
+</div>
+
+<script>
+  const balanceEl = document.getElementById('balance');
+  const incomeEl = document.getElementById('income');
+  const expenseEl = document.getElementById('expense');
+  const transactionsEl = document.getElementById('transactions');
+
+  let transactions = [];
+
+  function addTransaction() {
+    const desc = document.getElementById('desc').value.trim();
+    const amount = parseFloat(document.getElementById('amount').value);
+
+    if (!desc || isNaN(amount) || amount === 0) {
+      alert('Descrição e valor válido são obrigatórios. Valor não pode ser zero.');
+      return;
+    }
+
+    const transaction = {
+      id: Date.now(),
+      desc,
+      amount,
+    };
+
+    transactions.push(transaction);
+    updateUI();
+    clearInputs();
+  }
+
+  function updateUI() {
+    transactionsEl.innerHTML = '';
+    let income = 0, expense = 0;
+
+    transactions.forEach(tr => {
+      const item = document.createElement('div');
+      item.classList.add('transaction');
+      item.classList.add(tr.amount > 0 ? 'income' : 'expense');
+      item.innerHTML = `
+        <span>${tr.desc}</span>
+        <span>R$ ${tr.amount.toFixed(2)}</span>
+      `;
+      transactionsEl.appendChild(item);
+
+      if (tr.amount > 0) income += tr.amount;
+      else expense += tr.amount;
+    });
+
+    const balance = income + expense;
+
+    balanceEl.textContent = balance.toFixed(2);
+    incomeEl.textContent = income.toFixed(2);
+    expenseEl.textContent = Math.abs(expense).toFixed(2);
+  }
+
+  function clearInputs() {
+    document.getElementById('desc').value = '';
+    document.getElementById('amount').value = '';
+  }
+</script>
+
+</body>
+</html>
