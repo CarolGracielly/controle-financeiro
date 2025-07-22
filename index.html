@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Controle Financeiro Pessoal</title>
+<title>Controle Financeiro Completo</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
@@ -21,7 +21,7 @@
     padding: 30px 40px;
     border-radius: 12px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-    max-width: 450px;
+    max-width: 500px;
     width: 100%;
   }
   h1 {
@@ -37,8 +37,7 @@
     margin-bottom: 6px;
     font-size: 0.9rem;
   }
-  input[type="text"],
-  input[type="number"] {
+  input[type="text"] {
     width: 100%;
     padding: 10px 12px;
     border: 1.5px solid #ccc;
@@ -46,8 +45,7 @@
     font-size: 1rem;
     transition: border-color 0.2s ease;
   }
-  input[type="text"]:focus,
-  input[type="number"]:focus {
+  input[type="text"]:focus {
     border-color: #007bff;
     outline: none;
   }
@@ -94,9 +92,28 @@
     color: #34495e;
     font-weight: 700;
   }
+  #tabs {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+  .tab {
+    cursor: pointer;
+    font-weight: 600;
+    padding-bottom: 6px;
+    font-size: 1rem;
+    color: #666;
+    border-bottom: 2px solid transparent;
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .tab.active {
+    color: #007bff;
+    border-color: #007bff;
+  }
   #transactions {
     margin-top: 30px;
-    max-height: 250px;
+    max-height: 280px;
     overflow-y: auto;
     border-top: 2px solid #eee;
     padding-top: 10px;
@@ -138,25 +155,31 @@
   <h1>Controle Financeiro</h1>
 
   <label for="desc">Descrição</label>
-  <input type="text" id="desc" placeholder="Ex: Salário, Mercado..." />
+  <input type="text" id="desc" placeholder="Ex: Salário, Mercado..." autocomplete="off" />
 
-  <label for="amount">Valor (positivo para receita, negativo para despesa)</label>
-  <input type="number" id="amount" placeholder="Ex: 1500 ou -300" />
+  <label for="amount">Valor (ex: 2.756,66)</label>
+  <input type="text" id="amount" placeholder="Ex: 2.756,66" autocomplete="off" />
 
   <button onclick="addTransaction()">Adicionar</button>
+
+  <div id="tabs">
+    <div class="tab active" data-tab="all">Todos</div>
+    <div class="tab" data-tab="income">Entradas</div>
+    <div class="tab" data-tab="expense">Saídas</div>
+  </div>
 
   <div class="summary">
     <div>
       <div>Saldo</div>
-      <div class="balance">R$ <span id="balance">0.00</span></div>
+      <div class="balance">R$ <span id="balance">0,00</span></div>
     </div>
     <div>
       <div>Receitas</div>
-      <div class="income">R$ <span id="income">0.00</span></div>
+      <div class="income">R$ <span id="income">0,00</span></div>
     </div>
     <div>
       <div>Despesas</div>
-      <div class="expense">R$ <span id="expense">0.00</span></div>
+      <div class="expense">R$ <span id="expense">0,00</span></div>
     </div>
   </div>
 
@@ -173,27 +196,55 @@
   const incomeEl = document.getElementById('income');
   const expenseEl = document.getElementById('expense');
   const transactionsEl = document.getElementById('transactions');
+  const tabs = document.querySelectorAll('.tab');
   const ctx = document.getElementById('chart').getContext('2d');
 
   let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+  let currentTab = 'all';
 
   function saveTransactions() {
     localStorage.setItem('transactions', JSON.stringify(transactions));
   }
 
+  // Converte string valor brasileiro "2.756,66" pra número float 2756.66
+  function parseBRL(value) {
+    if (!value) return NaN;
+    // Remove pontos (milhar), troca vírgula por ponto
+    const normalized = value.replace(/\./g, '').replace(',', '.');
+    return parseFloat(normalized);
+  }
+
+  // Formata número float pra string no padrão brasileiro "1.234,56"
+  function formatBRL(value) {
+    return value.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+
   function addTransaction() {
     const desc = descInput.value.trim();
-    const amount = parseFloat(amountInput.value);
+    const rawAmount = amountInput.value.trim();
 
-    if (!desc || isNaN(amount) || amount === 0) {
-      alert('Descrição e valor válido são obrigatórios. Valor não pode ser zero.');
+    const amount = parseBRL(rawAmount);
+
+    if (!desc) {
+      alert('Descrição é obrigatória.');
       return;
     }
+    if (isNaN(amount) || amount === 0) {
+      alert('Informe um valor válido diferente de zero.');
+      return;
+    }
+
+    // Se aba for entradas, força valor positivo
+    // Se aba for saídas, força valor negativo
+    // Se aba for todos, mantém sinal do valor digitado
+    let finalAmount = amount;
+    if (currentTab === 'income') finalAmount = Math.abs(amount);
+    else if (currentTab === 'expense') finalAmount = -Math.abs(amount);
 
     const transaction = {
       id: Date.now(),
       desc,
-      amount,
+      amount: finalAmount,
     };
 
     transactions.push(transaction);
@@ -211,29 +262,37 @@
   function updateUI() {
     transactionsEl.innerHTML = '';
 
+    // Filtra transações conforme aba
+    let filtered = transactions;
+    if (currentTab === 'income') filtered = transactions.filter(t => t.amount > 0);
+    else if (currentTab === 'expense') filtered = transactions.filter(t => t.amount < 0);
+
     let income = 0, expense = 0;
 
-    transactions.forEach(tr => {
+    filtered.forEach(tr => {
       const div = document.createElement('div');
       div.classList.add('transaction');
       div.classList.add(tr.amount > 0 ? 'income' : 'expense');
       div.innerHTML = `
         <span>${tr.desc}</span>
-        <span>R$ ${tr.amount.toFixed(2)} 
+        <span>R$ ${formatBRL(tr.amount)} 
           <button onclick="deleteTransaction(${tr.id})" title="Deletar">&times;</button>
         </span>
       `;
       transactionsEl.appendChild(div);
+    });
 
-      if (tr.amount > 0) income += tr.amount;
-      else expense += tr.amount;
+    // Sempre calcula totais com todas as transações pra resumo
+    transactions.forEach(t => {
+      if (t.amount > 0) income += t.amount;
+      else expense += t.amount;
     });
 
     const balance = income + expense;
 
-    balanceEl.textContent = balance.toFixed(2);
-    incomeEl.textContent = income.toFixed(2);
-    expenseEl.textContent = Math.abs(expense).toFixed(2);
+    balanceEl.textContent = formatBRL(balance);
+    incomeEl.textContent = formatBRL(income);
+    expenseEl.textContent = formatBRL(Math.abs(expense));
 
     updateChart(income, Math.abs(expense));
   }
@@ -276,6 +335,17 @@
     descInput.focus();
   }
 
+  // Controle das abas
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentTab = tab.getAttribute('data-tab');
+      updateUI();
+    });
+  });
+
+  // Inicializa UI
   updateUI();
 </script>
 
