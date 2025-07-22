@@ -5,74 +5,130 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Controle Financeiro Pessoal</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f5f7fa;
+    background: #f0f2f5;
+    font-family: 'Inter', sans-serif;
     margin: 0; padding: 0;
     display: flex; justify-content: center; align-items: flex-start;
     min-height: 100vh;
+    color: #333;
   }
   .container {
     background: white;
     margin: 40px;
-    padding: 20px 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgb(0 0 0 / 0.1);
-    max-width: 400px;
+    padding: 30px 40px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    max-width: 450px;
     width: 100%;
   }
   h1 {
+    margin-bottom: 20px;
+    font-weight: 700;
+    color: #222;
     text-align: center;
-    margin-bottom: 15px;
-    color: #333;
   }
   label {
-    font-weight: bold;
+    font-weight: 600;
     display: block;
-    margin-top: 10px;
-    margin-bottom: 5px;
+    margin-top: 15px;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
   }
-  input, select {
+  input[type="text"],
+  input[type="number"] {
     width: 100%;
-    padding: 7px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
+    padding: 10px 12px;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+  }
+  input[type="text"]:focus,
+  input[type="number"]:focus {
+    border-color: #007bff;
+    outline: none;
   }
   button {
-    margin-top: 15px;
+    margin-top: 25px;
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     background: #007bff;
     color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
     border: none;
-    font-weight: bold;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
   }
   button:hover {
     background: #0056b3;
   }
   .summary {
-    margin-top: 20px;
-    font-size: 18px;
+    margin-top: 30px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
   }
-  .transactions {
-    margin-top: 20px;
-    max-height: 150px;
+  .summary div {
+    flex: 1;
+    text-align: center;
+    padding: 12px 0;
+    border-radius: 10px;
+    margin: 0 8px;
+    background: #f8f9fa;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+  }
+  .income {
+    color: #2ecc71;
+    font-weight: 700;
+  }
+  .expense {
+    color: #e74c3c;
+    font-weight: 700;
+  }
+  .balance {
+    color: #34495e;
+    font-weight: 700;
+  }
+  #transactions {
+    margin-top: 30px;
+    max-height: 250px;
     overflow-y: auto;
-    border-top: 1px solid #ddd;
+    border-top: 2px solid #eee;
+    padding-top: 10px;
   }
   .transaction {
     display: flex;
     justify-content: space-between;
-    padding: 5px 0;
-    border-bottom: 1px solid #eee;
+    padding: 10px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95rem;
+    align-items: center;
   }
-  .income {
-    color: green;
+  .transaction.income {
+    color: #27ae60;
   }
-  .expense {
-    color: red;
+  .transaction.expense {
+    color: #c0392b;
+  }
+  .transaction button {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: color 0.2s ease;
+  }
+  .transaction button:hover {
+    color: #e74c3c;
+  }
+  canvas {
+    margin-top: 30px;
   }
 </style>
 </head>
@@ -84,31 +140,50 @@
   <label for="desc">Descrição</label>
   <input type="text" id="desc" placeholder="Ex: Salário, Mercado..." />
 
-  <label for="amount">Valor (positivo ou negativo)</label>
-  <input type="number" id="amount" placeholder="Ex: 1000 ou -200" />
+  <label for="amount">Valor (positivo para receita, negativo para despesa)</label>
+  <input type="number" id="amount" placeholder="Ex: 1500 ou -300" />
 
   <button onclick="addTransaction()">Adicionar</button>
 
   <div class="summary">
-    <p>Saldo: R$ <span id="balance">0.00</span></p>
-    <p>Receitas: R$ <span id="income">0.00</span></p>
-    <p>Despesas: R$ <span id="expense">0.00</span></p>
+    <div>
+      <div>Saldo</div>
+      <div class="balance">R$ <span id="balance">0.00</span></div>
+    </div>
+    <div>
+      <div>Receitas</div>
+      <div class="income">R$ <span id="income">0.00</span></div>
+    </div>
+    <div>
+      <div>Despesas</div>
+      <div class="expense">R$ <span id="expense">0.00</span></div>
+    </div>
   </div>
 
-  <div class="transactions" id="transactions"></div>
+  <div id="transactions"></div>
+
+  <canvas id="chart" width="400" height="200"></canvas>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  const descInput = document.getElementById('desc');
+  const amountInput = document.getElementById('amount');
   const balanceEl = document.getElementById('balance');
   const incomeEl = document.getElementById('income');
   const expenseEl = document.getElementById('expense');
   const transactionsEl = document.getElementById('transactions');
+  const ctx = document.getElementById('chart').getContext('2d');
 
-  let transactions = [];
+  let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+  function saveTransactions() {
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+  }
 
   function addTransaction() {
-    const desc = document.getElementById('desc').value.trim();
-    const amount = parseFloat(document.getElementById('amount').value);
+    const desc = descInput.value.trim();
+    const amount = parseFloat(amountInput.value);
 
     if (!desc || isNaN(amount) || amount === 0) {
       alert('Descrição e valor válido são obrigatórios. Valor não pode ser zero.');
@@ -122,23 +197,33 @@
     };
 
     transactions.push(transaction);
+    saveTransactions();
     updateUI();
     clearInputs();
   }
 
+  function deleteTransaction(id) {
+    transactions = transactions.filter(t => t.id !== id);
+    saveTransactions();
+    updateUI();
+  }
+
   function updateUI() {
     transactionsEl.innerHTML = '';
+
     let income = 0, expense = 0;
 
     transactions.forEach(tr => {
-      const item = document.createElement('div');
-      item.classList.add('transaction');
-      item.classList.add(tr.amount > 0 ? 'income' : 'expense');
-      item.innerHTML = `
+      const div = document.createElement('div');
+      div.classList.add('transaction');
+      div.classList.add(tr.amount > 0 ? 'income' : 'expense');
+      div.innerHTML = `
         <span>${tr.desc}</span>
-        <span>R$ ${tr.amount.toFixed(2)}</span>
+        <span>R$ ${tr.amount.toFixed(2)} 
+          <button onclick="deleteTransaction(${tr.id})" title="Deletar">&times;</button>
+        </span>
       `;
-      transactionsEl.appendChild(item);
+      transactionsEl.appendChild(div);
 
       if (tr.amount > 0) income += tr.amount;
       else expense += tr.amount;
@@ -149,12 +234,49 @@
     balanceEl.textContent = balance.toFixed(2);
     incomeEl.textContent = income.toFixed(2);
     expenseEl.textContent = Math.abs(expense).toFixed(2);
+
+    updateChart(income, Math.abs(expense));
+  }
+
+  let chartInstance = null;
+  function updateChart(income, expense) {
+    if (chartInstance) {
+      chartInstance.data.datasets[0].data = [income, expense];
+      chartInstance.update();
+      return;
+    }
+
+    chartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Receitas', 'Despesas'],
+        datasets: [{
+          data: [income, expense],
+          backgroundColor: ['#27ae60', '#c0392b'],
+          hoverBackgroundColor: ['#2ecc71', '#e74c3c'],
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '70%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { font: { size: 14, weight: 'bold' } }
+          }
+        }
+      }
+    });
   }
 
   function clearInputs() {
-    document.getElementById('desc').value = '';
-    document.getElementById('amount').value = '';
+    descInput.value = '';
+    amountInput.value = '';
+    descInput.focus();
   }
+
+  updateUI();
 </script>
 
 </body>
