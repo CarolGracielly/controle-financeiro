@@ -244,6 +244,49 @@
       background: var(--box-bg-dark);
       box-shadow: 0 1px 3px rgba(255,255,255,0.1);
     }
+    .transaction {
+      background: var(--box-bg-light);
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    body.noturno .transaction {
+      background: var(--box-bg-dark);
+      box-shadow: 0 1px 3px rgba(255,255,255,0.1);
+    }
+    .transaction div:first-child {
+      flex-grow: 1;
+      padding-right: 10px;
+    }
+    .transaction .action-buttons {
+        display: flex;
+        gap: 5px;
+    }
+    .transaction button {
+      background: transparent;
+      color: var(--text-light);
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0 5px;
+    }
+    body.noturno .transaction button {
+      color: var(--text-dark);
+    }
+    .transaction button.edit-btn {
+        color: #2196F3; /* Cor azul para edição */
+        font-size: 1rem;
+        font-weight: bold;
+    }
+    .transaction button.delete-btn {
+        color: var(--danger-light); /* Cor vermelha para deletar */
+    }
     /* Responsividade básica */
     @media (max-width: 768px) {
       .wrapper {
@@ -319,7 +362,7 @@
 
   <div class="wrapper">
     <div class="form-area">
-      <input type="text" id="valor" placeholder="Valor (ex: 2756,66)" />
+      <input type="hidden" id="transactionIdToEdit" /> <input type="text" id="valor" placeholder="Valor (ex: 2756,66)" />
       <input list="descricoes" id="descricao" placeholder="Descrição (ex: Nubank)" autocomplete="off" />
       <datalist id="descricoes">
         <option value="Nubank"></option>
@@ -347,7 +390,7 @@
         <option value="outros">Outros</option>
       </select>
       <input type="number" id="parcelas" placeholder="Parcelas (ex: 12)" min="1" max="36" />
-      <button onclick="adicionar()">Adicionar</button>
+      <button id="addUpdateButton" onclick="adicionarOuAtualizar()">Adicionar</button>
     </div>
 
     <div class="transactions-area">
@@ -381,6 +424,8 @@
     const graficoPizzaCtx = document.getElementById('graficoPizza').getContext('2d');
     const graficoCategoriasCtx = document.getElementById('graficoCategorias').getContext('2d');
     const graficoCategoriasContainer = document.getElementById('graficoCategoriasContainer');
+    const transactionIdToEdit = document.getElementById('transactionIdToEdit'); // Novo input hidden
+    const addUpdateButton = document.getElementById('addUpdateButton'); // Botão Adicionar/Atualizar
 
     let transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
     let graficoPrincipal, graficoCategorias; // Variáveis para os objetos do gráfico
@@ -418,20 +463,6 @@
       document.body.classList.toggle('noturno');
       localStorage.setItem('modoNoturno', toggle.checked);
       atualizar(); // Atualiza gráficos com novas cores
-    }
-
-    function updateChartColors() {
-        const isNoturno = document.body.classList.contains('noturno');
-        const textColor = isNoturno ? '#f1f5f9' : '#2f2f2f'; // --text-dark ou --text-light
-
-        if (graficoPrincipal) {
-            graficoPrincipal.options.plugins.legend.labels.color = textColor;
-            graficoPrincipal.update();
-        }
-        if (graficoCategorias) {
-            graficoCategorias.options.plugins.legend.labels.color = textColor;
-            graficoCategorias.update();
-        }
     }
 
     // --- Event Listeners ---
@@ -472,13 +503,14 @@
       atualizar();
     }
 
-    function adicionar() {
+    function adicionarOuAtualizar() {
       const valor = parseValor(valorInput.value.trim());
       const descricao = descricaoInput.value.trim();
       const tipo = tipoSelect.value;
       const categoria = categoriaSelect.value;
       const parcelas = parseInt(parcelasInput.value.trim()) || 1;
       const { mes, ano } = getMesAnoAtual();
+      const idSendoEditado = transactionIdToEdit.value; // Pega o ID da transação que está sendo editada
 
       // Limpa classes de validação anteriores
       valorInput.classList.remove('invalid');
@@ -499,54 +531,76 @@
         categoriaSelect.classList.add('invalid');
         isValid = false;
       }
-      if (parcelas > 1 && tipo !== 'saida') {
-        alert('Parcelas só são permitidas para saídas.');
+      // Validação de parcelas apenas para 'Adicionar', não para 'Atualizar' uma parcela existente
+      // (pois uma parcela existente já tem seu valor fixo e não precisa ser "re-parcelada")
+      if (!idSendoEditado && parcelas > 1 && tipo !== 'saida') {
+        alert('Parcelas só são permitidas para saídas ao adicionar uma nova transação.');
         parcelasInput.classList.add('invalid');
         isValid = false;
       }
-      if (parcelas > 36) { // Limite de parcelas
-          alert('O número máximo de parcelas é 36.');
+      if (!idSendoEditado && parcelas > 36) { // Limite de parcelas ao adicionar
+          alert('O número máximo de parcelas é 36 ao adicionar uma nova transação.');
           parcelasInput.classList.add('invalid');
           isValid = false;
       }
+
 
       if (!isValid) {
           alert('Por favor, preencha todos os campos obrigatórios corretamente.');
           return;
       }
 
-      // NOVO: Gerar um parcelGroup ID se for uma transação parcelada
-      const parcelGroup = parcelas > 1 ? generateUniqueId() : undefined;
-
-      if (parcelas > 1) {
-        for (let i = 0; i < parcelas; i++) {
-          let mesParcela = mes + i;
-          let anoParcela = ano;
-          if (mesParcela > 12) {
-            mesParcela -= 12;
-            anoParcela += 1;
+      if (idSendoEditado) {
+          // Lógica de Atualização
+          const index = transacoes.findIndex(t => t.id === idSendoEditado);
+          if (index !== -1) {
+              transacoes[index].valor = valor;
+              transacoes[index].descricao = descricao;
+              transacoes[index].tipo = tipo;
+              transacoes[index].categoria = tipo === 'saida' ? categoria : '';
+              // Mês e ano não são alterados ao editar uma parcela específica
+              // Parcelas não são alteradas para uma transação já existente (teria que ser nova série)
           }
-          transacoes.push({
-            id: generateUniqueId(), // ID único para cada parcela
-            parcelGroup: parcelGroup, // ID de grupo para todas as parcelas
-            tipo,
-            valor: valor, // Valor da parcela já é o valor digitado
-            descricao: `${descricao} (${i + 1}/${parcelas})`,
-            categoria: categoria, // Adiciona categoria
-            mes: mesParcela,
-            ano: anoParcela
-          });
-        }
+          // Limpa o ID de edição e reseta o botão
+          transactionIdToEdit.value = '';
+          addUpdateButton.textContent = 'Adicionar';
+          parcelasInput.style.display = 'block'; // Mostra parcelas novamente
+          parcelasInput.placeholder = 'Parcelas (ex: 12)';
       } else {
-        transacoes.push({
-          id: generateUniqueId(), // ID único para transações não parceladas
-          tipo,
-          valor,
-          descricao: tipo === 'salario' ? 'Salário' : descricao,
-          categoria: tipo === 'saida' ? categoria : '', // Adiciona categoria apenas para saídas
-          mes,
-          ano
-        });
+          // Lógica de Adição (existente)
+          const parcelGroup = parcelas > 1 ? generateUniqueId() : undefined;
+
+          if (parcelas > 1) {
+            for (let i = 0; i < parcelas; i++) {
+              let mesParcela = mes + i;
+              let anoParcela = ano;
+              if (mesParcela > 12) {
+                mesParcela -= 12;
+                anoParcela += 1;
+              }
+              transacoes.push({
+                id: generateUniqueId(), // ID único para cada parcela
+                parcelGroup: parcelGroup, // ID de grupo para todas as parcelas
+                tipo,
+                valor: valor, // Valor da parcela já é o valor digitado
+                // Adiciona o número da parcela apenas se for uma transação parcelada
+                descricao: `${descricao}${parcelas > 1 ? ` (${i + 1}/${parcelas})` : ''}`,
+                categoria: categoria, // Adiciona categoria
+                mes: mesParcela,
+                ano: anoParcela
+              });
+            }
+          } else {
+            transacoes.push({
+              id: generateUniqueId(), // ID único para transações não parceladas
+              tipo,
+              valor,
+              descricao: tipo === 'salario' ? 'Salário' : descricao,
+              categoria: tipo === 'saida' ? categoria : '', // Adiciona categoria apenas para saídas
+              mes,
+              ano
+            });
+          }
       }
 
       salvarDados();
@@ -562,7 +616,34 @@
       atualizar();
     }
 
-    // MODIFICADO: Função remover para lidar com parcelas
+    // NOVA FUNÇÃO: Preencher formulário para edição
+    function editar(idDaTransacao) {
+        const transacao = transacoes.find(t => t.id === idDaTransacao);
+        if (transacao) {
+            transactionIdToEdit.value = transacao.id; // Guarda o ID para a atualização
+            valorInput.value = transacao.valor.toFixed(2).replace('.', ','); // Formata para PT-BR
+            // Remove a parte da parcela da descrição para edição
+            descricaoInput.value = transacao.descricao.replace(/\s\(\d+\/\d+\)$/, '');
+            tipoSelect.value = transacao.tipo;
+            
+            if (transacao.tipo === 'saida') {
+                categoriaSelect.style.display = 'block';
+                categoriaSelect.value = transacao.categoria;
+            } else {
+                categoriaSelect.style.display = 'none';
+                categoriaSelect.value = '';
+            }
+            
+            // Esconde o campo de parcelas ao editar, pois não se edita a quantidade de parcelas de uma transação já existente.
+            parcelasInput.style.display = 'none';
+            parcelasInput.value = ''; // Limpa o valor
+            
+            addUpdateButton.textContent = 'Atualizar'; // Muda o texto do botão
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // Rola para o topo para o formulário
+        }
+    }
+
+
     function remover(idDaParcela) {
         if (!confirm('Tem certeza que deseja remover esta transação?')) {
             return;
@@ -615,11 +696,12 @@
             <br>
             <small style="opacity: 0.7;">${t.categoria ? `(${t.categoria})` : ''}</small>
           </div>
-          <div>
+          <div class="action-buttons">
             <strong style="color: ${tipoClass === 'saida' ? 'var(--danger-light)' : (tipoClass === 'entrada' ? 'var(--accent1)' : 'var(--accent3)')};">
               ${formatar(t.valor)}
             </strong>
-            <button onclick="remover('${t.id}')">✕</button>
+            <button class="edit-btn" onclick="editar('${t.id}')">Editar</button>
+            <button class="delete-btn" onclick="remover('${t.id}')">✕</button>
           </div>
         `;
         listaTransacoes.appendChild(div);
@@ -700,12 +782,12 @@
         graficoCategoriasContainer.style.display = 'block'; // Mostra o contêiner se houver dados
         // Definindo as cores para as novas categorias
         const categoryColors = {
-            'contas': '#FF6384', // Exemplo de cor para Contas
-            'emprestimos': '#36A2EB', // Exemplo de cor para Empréstimos
-            'compras': '#FFCD56', // Exemplo de cor para Compras
-            'dividas': '#4BC0C0', // Exemplo de cor para Dívidas
-            'cartoes': '#9966FF', // Exemplo de cor para Cartões
-            'outros': '#FF9F40' // Exemplo de cor para Outros
+            'contas': '#FF6384',
+            'emprestimos': '#36A2EB',
+            'compras': '#FFCD56',
+            'dividas': '#4BC0C0',
+            'cartoes': '#9966FF',
+            'outros': '#FF9F40'
         };
         const backgroundColors = categoriasLabels.map(label => categoryColors[label] || '#CCCCCC'); // Cor padrão se não encontrada
 
