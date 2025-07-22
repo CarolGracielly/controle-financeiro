@@ -6,17 +6,18 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap" rel="stylesheet" />
   <style>
-    /* Seu CSS permanece igual, não mexi */
     :root {
       --bg-light: #fdf6f0;
       --bg-dark: #1e293b;
       --text-light: #2f2f2f;
       --text-dark: #f1f5f9;
-      --accent1: #b2d8d8;
-      --accent2: #ffc8dd;
-      --accent3: #fcefb4;
+      --accent1: #b2d8d8; /* Verde/Azul claro */
+      --accent2: #ffc8dd; /* Rosa claro */
+      --accent3: #fcefb4; /* Amarelo claro */
       --box-bg-light: #fffaf5;
       --box-bg-dark: #334155;
+      --danger-light: #ff6b6b; /* Vermelho claro para erro */
+      --danger-dark: #cc3333; /* Vermelho escuro para erro */
     }
     body {
       margin: 0;
@@ -61,7 +62,7 @@
     body.noturno #mesSelector,
     body.noturno #anoSelector {
       background-color: var(--box-bg-dark);
-      color: white;
+      color: var(--text-dark);
     }
     .modo-toggle {
       position: absolute;
@@ -99,6 +100,7 @@
       flex-direction: row;
       gap: 2rem;
       padding: 1rem;
+      flex-wrap: wrap; /* Adicionado para responsividade */
     }
     .form-area {
       background: var(--box-bg-light);
@@ -109,6 +111,7 @@
       flex-direction: column;
       gap: 0.5rem;
       transition: all 0.3s ease-in-out;
+      min-width: 300px; /* Garante que não fique muito estreito */
     }
     body.noturno .form-area {
       background: var(--box-bg-dark);
@@ -125,7 +128,14 @@
     body.noturno input,
     body.noturno select {
       background: #475569;
-      color: white;
+      color: var(--text-dark);
+    }
+    input.invalid, select.invalid {
+        border: 2px solid var(--danger-light);
+    }
+    body.noturno input.invalid,
+    body.noturno select.invalid {
+        border: 2px solid var(--danger-dark);
     }
     button {
       padding: 0.5rem;
@@ -135,6 +145,10 @@
       font-weight: bold;
       cursor: pointer;
       font-family: 'Montserrat', sans-serif;
+      transition: background 0.2s ease;
+    }
+    button:hover {
+        opacity: 0.9;
     }
     .summary {
       display: flex;
@@ -147,6 +161,7 @@
       gap: 1rem;
       font-family: 'Montserrat', sans-serif;
       font-weight: 300;
+      flex-wrap: wrap; /* Adicionado para responsividade */
     }
     .summary div {
       text-align: center;
@@ -154,6 +169,7 @@
       padding: 1rem;
       border-radius: 0.5rem;
       font-weight: bold;
+      min-width: 120px; /* Garante que não fiquem muito pequenos */
     }
     .summary div:nth-child(1) {
       background-color: #e0f7fa; /* Saldo */
@@ -190,40 +206,80 @@
       display: flex;
       flex-direction: column;
       gap: 1rem;
+      min-width: 300px; /* Garante que não fique muito estreito */
     }
-    .transaction {
-      background: var(--box-bg-light);
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.9rem;
-      font-family: 'Montserrat', sans-serif;
-      font-weight: 300;
+    /* NOVO: Estilo para o contêiner dos gráficos */
+    .charts-container {
+        display: flex;
+        flex-wrap: wrap; /* Permite que os gráficos quebrem para a próxima linha em telas menores */
+        gap: 1rem;
+        justify-content: center; /* Centraliza os gráficos */
     }
-    body.noturno .transaction {
-      background: var(--box-bg-dark);
+    .grafico {
+        background: var(--box-bg-light);
+        padding: 1rem;
+        border-radius: 1rem;
+        transition: all 0.3s ease-in-out;
+        flex: 1; /* Permite que os gráficos cresçam para preencher o espaço */
+        min-width: 280px; /* Garante um tamanho mínimo para o gráfico */
+        max-width: 50%; /* Ocupa no máximo metade da largura do contêiner */
+        box-sizing: border-box; /* Inclui padding e border na largura */
+    }
+    body.noturno .grafico {
+        background: var(--box-bg-dark);
     }
     .grafico canvas {
-      max-height: 220px;
+      max-height: 250px; /* Aumentado um pouco para melhor visualização */
     }
     .dicas {
       background: var(--box-bg-light);
-      padding: 0.5rem;
+      padding: 0.8rem;
       border-radius: 0.5rem;
       font-size: 0.9rem;
       font-family: 'Montserrat', sans-serif;
       font-weight: 300;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     body.noturno .dicas {
       background: var(--box-bg-dark);
+      box-shadow: 0 1px 3px rgba(255,255,255,0.1);
+    }
+    /* Responsividade básica */
+    @media (max-width: 768px) {
+      .wrapper {
+        flex-direction: column;
+      }
+      .form-area, .transactions-area {
+        width: 100%;
+        flex: none; /* Remove flex-grow */
+      }
+      .summary {
+        flex-direction: column;
+      }
+      .summary div {
+        min-width: auto;
+      }
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .modo-toggle {
+        position: static; /* Remove absolute positioning */
+        margin-top: 10px;
+      }
+      /* Em telas menores, os gráficos se empilham */
+      .charts-container {
+          flex-direction: column;
+      }
+      .grafico {
+          max-width: 100%; /* Ocupa a largura total */
+      }
     }
   </style>
 </head>
 <body>
   <div class="top-bar">
-    <h1>💵</h1>
+    <h1>💵 Meu Controle Financeiro</h1>
 
     <select id="mesSelector" aria-label="Selecionar mês">
       <option value="1">Janeiro</option>
@@ -254,11 +310,11 @@
   </div>
 
   <div class="summary">
-    <div><strong>Saldo</strong><br><span id="saldo">R$ 0,00</span></div>
-    <div><strong>Entradas</strong><br><span id="entradas">R$ 0,00</span></div>
-    <div><strong>Saídas</strong><br><span id="saidas">R$ 0,00</span></div>
-    <div><strong>Salário</strong><br><span id="salario">R$ 0,00</span></div>
-    <div><strong>Sobrou</strong><br><span id="sobrou">R$ 0,00</span></div>
+    <div><strong>Saldo Geral</strong><br><span id="saldo">R$ 0,00</span></div>
+    <div><strong>Total Entradas</strong><br><span id="entradas">R$ 0,00</span></div>
+    <div><strong>Total Saídas</strong><br><span id="saidas">R$ 0,00</span></div>
+    <div><strong>Salário Recebido</strong><br><span id="salario">R$ 0,00</span></div>
+    <div><strong>Do Mês Anterior</strong><br><span id="sobrou">R$ 0,00</span></div>
   </div>
 
   <div class="wrapper">
@@ -278,16 +334,32 @@
       </datalist>
       <select id="tipo">
         <option value="entrada">Entrada</option>
-        <option value="saida">Saída</option>
         <option value="salario">Salário</option>
+        <option value="saida">Saída</option>
+      </select>
+      <select id="categoria" style="display:none;">
+        <option value="">Selecione a Categoria</option>
+        <option value="contas">Contas</option>
+        <option value="emprestimos">Empréstimos</option>
+        <option value="compras">Compras</option>
+        <option value="dividas">Dívidas</option>
+        <option value="cartoes">Cartões</option>
+        <option value="outros">Outros</option>
       </select>
       <input type="number" id="parcelas" placeholder="Parcelas (ex: 12)" min="1" max="36" />
       <button onclick="adicionar()">Adicionar</button>
     </div>
 
     <div class="transactions-area">
-      <div class="grafico">
-        <canvas id="graficoPizza"></canvas>
+      <div class="charts-container">
+        <div class="grafico">
+          <h3>Visão Geral do Mês</h3>
+          <canvas id="graficoPizza"></canvas>
+        </div>
+        <div class="grafico" id="graficoCategoriasContainer" style="display:none;">
+          <h3>Gastos por Categoria</h3>
+          <canvas id="graficoCategorias"></canvas>
+        </div>
       </div>
       <div class="dicas" id="dicas"></div>
       <div class="transactions-list" id="lista-transacoes"></div>
@@ -296,45 +368,40 @@
 
   <script>
     const toggle = document.getElementById('toggleModo');
-    if (localStorage.getItem('modoNoturno') === 'true') {
-      document.body.classList.add('noturno');
-      toggle.checked = true;
-    }
-    toggle.addEventListener('change', () => {
-      document.body.classList.toggle('noturno');
-      localStorage.setItem('modoNoturno', toggle.checked);
-      atualizar();
-    });
-
     const inputSobrouMes = document.getElementById('inputSobrouMes');
-    function salvarSobrou() {
-      let val = parseValor(inputSobrouMes.value.trim());
-      if (isNaN(val)) val = 0;
-      localStorage.setItem('sobrouMesAnterior', val);
-      atualizar();
-    }
-    inputSobrouMes.value = formatar(parseFloat(localStorage.getItem('sobrouMesAnterior')) || 0);
+    const mesSelector = document.getElementById('mesSelector');
+    const anoSelector = document.getElementById('anoSelector');
+    const valorInput = document.getElementById('valor');
+    const descricaoInput = document.getElementById('descricao');
+    const tipoSelect = document.getElementById('tipo');
+    const categoriaSelect = document.getElementById('categoria');
+    const parcelasInput = document.getElementById('parcelas');
+    const listaTransacoes = document.getElementById('lista-transacoes');
+    const dicasDiv = document.getElementById('dicas');
+    const graficoPizzaCtx = document.getElementById('graficoPizza').getContext('2d');
+    const graficoCategoriasCtx = document.getElementById('graficoCategorias').getContext('2d');
+    const graficoCategoriasContainer = document.getElementById('graficoCategoriasContainer');
 
     let transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+    let graficoPrincipal, graficoCategorias; // Variáveis para os objetos do gráfico
 
-    const ctx = document.getElementById('graficoPizza').getContext('2d');
-    let grafico;
+    // --- Funções Auxiliares ---
 
-    const anoSelector = document.getElementById('anoSelector');
-    const anoAtual = new Date().getFullYear();
-    for(let a=anoAtual; a<=2030; a++) {
-      const option = document.createElement('option');
-      option.value = a;
-      option.textContent = a;
-      anoSelector.appendChild(option);
+    function generateUniqueId() {
+      return Date.now().toString(36) + Math.random().toString(36).substring(2);
     }
 
-    const mesSelector = document.getElementById('mesSelector');
-    mesSelector.value = new Date().getMonth() + 1;
-    anoSelector.value = anoAtual;
+    function formatar(valor) {
+      return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
 
-    mesSelector.addEventListener('change', atualizar);
-    anoSelector.addEventListener('change', atualizar);
+    function parseValor(valorStr) {
+      if (!valorStr) return NaN;
+      let v = valorStr.replace(/[^\d,.-]/g, ''); // Permite apenas dígitos, vírgula, ponto e hífen
+      v = v.replace(/\./g, '').replace(',', '.'); // Troca ponto por vazio e vírgula por ponto para parseFloat
+      let n = parseFloat(v);
+      return n;
+    }
 
     function getMesAnoAtual() {
       return {
@@ -343,35 +410,113 @@
       };
     }
 
-    function formatar(valor) {
-      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    function salvarDados() {
+      localStorage.setItem('transacoes', JSON.stringify(transacoes));
     }
 
-    function parseValor(valorStr) {
-      if (!valorStr) return NaN;
-      let v = valorStr.replace(/[^\d,.-]/g, '');
-      v = v.replace(/\./g, '').replace(',', '.');
-      let n = parseFloat(v);
-      return n;
+    function toggleModoNoturno() {
+      document.body.classList.toggle('noturno');
+      localStorage.setItem('modoNoturno', toggle.checked);
+      atualizar(); // Atualiza gráficos com novas cores
+    }
+
+    function updateChartColors() {
+        const isNoturno = document.body.classList.contains('noturno');
+        const textColor = isNoturno ? '#f1f5f9' : '#2f2f2f'; // --text-dark ou --text-light
+
+        if (graficoPrincipal) {
+            graficoPrincipal.options.plugins.legend.labels.color = textColor;
+            graficoPrincipal.update();
+        }
+        if (graficoCategorias) {
+            graficoCategorias.options.plugins.legend.labels.color = textColor;
+            graficoCategorias.update();
+        }
+    }
+
+    // --- Event Listeners ---
+
+    toggle.addEventListener('change', toggleModoNoturno);
+
+    mesSelector.addEventListener('change', atualizar);
+    anoSelector.addEventListener('change', atualizar);
+
+    tipoSelect.addEventListener('change', () => {
+      if (tipoSelect.value === 'saida') {
+        categoriaSelect.style.display = 'block';
+        parcelasInput.placeholder = 'Parcelas (ex: 12)';
+      } else {
+        categoriaSelect.style.display = 'none';
+        parcelasInput.value = ''; // Limpa o campo de parcelas se não for saída
+        parcelasInput.placeholder = 'Parcelas (apenas para saídas)';
+      }
+      // Garante que a descrição seja obrigatória para entrada e saída, não para salário
+      if (tipoSelect.value === 'salario') {
+          descricaoInput.classList.remove('invalid'); // Remove a validação se for salário
+      }
+    });
+
+
+    // --- Funções Principais ---
+
+    function salvarSobrou() {
+      let val = parseValor(inputSobrouMes.value.trim());
+      if (isNaN(val)) {
+        val = 0;
+        inputSobrouMes.classList.add('invalid');
+        alert('Valor para "Saldo que sobrou" inválido. Use apenas números e vírgula.');
+      } else {
+        inputSobrouMes.classList.remove('invalid');
+      }
+      localStorage.setItem('sobrouMesAnterior', val);
+      atualizar();
     }
 
     function adicionar() {
-      const valorStr = document.getElementById('valor').value.trim();
-      const descricao = document.getElementById('descricao').value.trim();
-      const tipo = document.getElementById('tipo').value;
-      const parcelas = parseInt(document.getElementById('parcelas').value.trim()) || 1;
+      const valor = parseValor(valorInput.value.trim());
+      const descricao = descricaoInput.value.trim();
+      const tipo = tipoSelect.value;
+      const categoria = categoriaSelect.value;
+      const parcelas = parseInt(parcelasInput.value.trim()) || 1;
+      const { mes, ano } = getMesAnoAtual();
 
-      const valor = parseValor(valorStr); // This 'valor' will now be the value *per installment*
-      if (isNaN(valor) || valor <= 0) return alert('Valor inválido.');
+      // Limpa classes de validação anteriores
+      valorInput.classList.remove('invalid');
+      descricaoInput.classList.remove('invalid');
+      categoriaSelect.classList.remove('invalid');
 
-      if (tipo !== 'salario' && !descricao) return alert('Descrição obrigatória.');
+      let isValid = true;
 
+      if (isNaN(valor) || valor <= 0) {
+        valorInput.classList.add('invalid');
+        isValid = false;
+      }
+      if (tipo !== 'salario' && !descricao) {
+        descricaoInput.classList.add('invalid');
+        isValid = false;
+      }
+      if (tipo === 'saida' && !categoria) {
+        categoriaSelect.classList.add('invalid');
+        isValid = false;
+      }
       if (parcelas > 1 && tipo !== 'saida') {
         alert('Parcelas só são permitidas para saídas.');
-        return;
+        parcelasInput.classList.add('invalid');
+        isValid = false;
+      }
+      if (parcelas > 36) { // Limite de parcelas
+          alert('O número máximo de parcelas é 36.');
+          parcelasInput.classList.add('invalid');
+          isValid = false;
       }
 
-      const { mes, ano } = getMesAnoAtual();
+      if (!isValid) {
+          alert('Por favor, preencha todos os campos obrigatórios corretamente.');
+          return;
+      }
+
+      // NOVO: Gerar um parcelGroup ID se for uma transação parcelada
+      const parcelGroup = parcelas > 1 ? generateUniqueId() : undefined;
 
       if (parcelas > 1) {
         for (let i = 0; i < parcelas; i++) {
@@ -382,123 +527,243 @@
             anoParcela += 1;
           }
           transacoes.push({
+            id: generateUniqueId(), // ID único para cada parcela
+            parcelGroup: parcelGroup, // ID de grupo para todas as parcelas
             tipo,
-            valor: valor,  // valor da parcela já inserido direto
+            valor: valor, // Valor da parcela já é o valor digitado
             descricao: `${descricao} (${i + 1}/${parcelas})`,
+            categoria: categoria, // Adiciona categoria
             mes: mesParcela,
             ano: anoParcela
           });
         }
       } else {
         transacoes.push({
+          id: generateUniqueId(), // ID único para transações não parceladas
           tipo,
           valor,
           descricao: tipo === 'salario' ? 'Salário' : descricao,
+          categoria: tipo === 'saida' ? categoria : '', // Adiciona categoria apenas para saídas
           mes,
           ano
         });
       }
 
-      localStorage.setItem('transacoes', JSON.stringify(transacoes));
+      salvarDados();
 
-      document.getElementById('valor').value = '';
-      document.getElementById('descricao').value = '';
-      document.getElementById('parcelas').value = '';
+      // Limpa os campos
+      valorInput.value = '';
+      descricaoInput.value = '';
+      parcelasInput.value = '';
+      tipoSelect.value = 'entrada'; // Reseta para entrada
+      categoriaSelect.value = ''; // Reseta categoria
+      categoriaSelect.style.display = 'none'; // Esconde categoria
 
       atualizar();
     }
 
-    function remover(index) {
-      transacoes.splice(index, 1);
-      localStorage.setItem('transacoes', JSON.stringify(transacoes));
-      atualizar();
+    // MODIFICADO: Função remover para lidar com parcelas
+    function remover(idDaParcela) {
+        if (!confirm('Tem certeza que deseja remover esta transação?')) {
+            return;
+        }
+
+        const transacaoParaRemover = transacoes.find(t => t.id === idDaParcela);
+
+        if (!transacaoParaRemover) {
+            console.error("Transação não encontrada.");
+            return;
+        }
+
+        if (transacaoParaRemover.parcelGroup) {
+            // Se tem parcelGroup, remove todas as transações com esse parcelGroup
+            if (confirm('Esta é uma transação parcelada. Deseja remover TODAS as parcelas em todos os meses?')) {
+                transacoes = transacoes.filter(t => t.parcelGroup !== transacaoParaRemover.parcelGroup);
+            } else {
+                // Se o usuário não quiser remover todas, remove apenas esta parcela específica
+                transacoes = transacoes.filter(t => t.id !== idDaParcela);
+            }
+        } else {
+            // Se não tem parcelGroup, remove apenas esta transação
+            transacoes = transacoes.filter(t => t.id !== idDaParcela);
+        }
+
+        salvarDados();
+        atualizar();
     }
 
     function atualizar() {
-      const lista = document.getElementById('lista-transacoes');
-      lista.innerHTML = '';
+      listaTransacoes.innerHTML = '';
 
       const { mes, ano } = getMesAnoAtual();
 
+      // Filtra transações para o mês/ano selecionado
       const transacoesMes = transacoes.filter(t => t.mes === mes && t.ano === ano);
 
-      let total = 0, entradas = 0, saidas = 0, salarioTotal = 0;
+      let totalSaldo = 0, totalEntradas = 0, totalSaidas = 0, totalSalario = 0;
       const sobrouMesAnterior = parseFloat(localStorage.getItem('sobrouMesAnterior')) || 0;
 
-      transacoesMes.forEach((t, i) => {
+      const gastosPorCategoria = {};
+
+      transacoesMes.forEach(t => {
         const div = document.createElement('div');
         div.className = 'transaction';
+        const tipoClass = t.tipo === 'saida' ? 'saida' : (t.tipo === 'entrada' ? 'entrada' : 'salario');
         div.innerHTML = `
-          <div>${t.descricao}</div>
           <div>
-            <strong>${formatar(t.valor)}</strong>
-            <button onclick="remover(${i})">✕</button>
+            ${t.descricao}
+            <br>
+            <small style="opacity: 0.7;">${t.categoria ? `(${t.categoria})` : ''}</small>
+          </div>
+          <div>
+            <strong style="color: ${tipoClass === 'saida' ? 'var(--danger-light)' : (tipoClass === 'entrada' ? 'var(--accent1)' : 'var(--accent3)')};">
+              ${formatar(t.valor)}
+            </strong>
+            <button onclick="remover('${t.id}')">✕</button>
           </div>
         `;
-        lista.appendChild(div);
+        listaTransacoes.appendChild(div);
 
         if (t.tipo === 'entrada') {
-          total += t.valor;
-          entradas += t.valor;
+          totalEntradas += t.valor;
         } else if (t.tipo === 'saida') {
-          total -= t.valor;
-          saidas += t.valor;
+          totalSaidas += t.valor;
+          if (t.categoria) {
+            gastosPorCategoria[t.categoria] = (gastosPorCategoria[t.categoria] || 0) + t.valor;
+          }
         } else if (t.tipo === 'salario') {
-          total += t.valor;
-          salarioTotal += t.valor;
+          totalSalario += t.valor;
         }
       });
 
-      total = sobrouMesAnterior + entradas + salarioTotal - saidas;
+      totalSaldo = sobrouMesAnterior + totalEntradas + totalSalario - totalSaidas;
 
-      document.getElementById('saldo').textContent = formatar(total);
-      document.getElementById('entradas').textContent = formatar(entradas);
-      document.getElementById('saidas').textContent = formatar(saidas);
-      document.getElementById('salario').textContent = formatar(salarioTotal);
+      document.getElementById('saldo').textContent = formatar(totalSaldo);
+      document.getElementById('entradas').textContent = formatar(totalEntradas);
+      document.getElementById('saidas').textContent = formatar(totalSaidas);
+      document.getElementById('salario').textContent = formatar(totalSalario);
       document.getElementById('sobrou').textContent = formatar(sobrouMesAnterior);
+      inputSobrouMes.value = formatar(sobrouMesAnterior); // Atualiza o campo de saldo anterior
 
-      mostrarDicas(total, entradas, saidas, salarioTotal);
-      atualizarGrafico(entradas + salarioTotal, saidas);
+      mostrarDicas(totalSaldo, totalEntradas, totalSaidas, totalSalario);
+      atualizarGraficos(totalEntradas + totalSalario, totalSaidas, gastosPorCategoria);
     }
 
     function mostrarDicas(saldo, entradas, saidas, salario) {
-      const dica = document.getElementById('dicas');
       if (saldo < 0) {
-        dica.textContent = '🚨 Cuidado! Você está no vermelho. Reveja suas saídas e priorize o essencial.';
-      } else if (salario > entradas) {
-        dica.textContent = '📌 Dica: Você está dependendo só do salário. Considere buscar fontes extras de renda.';
-      } else if (saldo > 0 && entradas > saidas) {
-        dica.textContent = '✅ Muito bem! Você está com saldo positivo. Que tal guardar ou investir parte disso?';
+        dicasDiv.textContent = '🚨 Cuidado! Você está no vermelho. Reveja suas saídas e priorize o essencial.';
+      } else if (salario > entradas && salario > 0) { // Verifica se há salário para a dica ser relevante
+        dicasDiv.textContent = '📌 Dica: Você está dependendo só do salário. Considere buscar fontes extras de renda.';
+      } else if (saldo > 0 && entradas + salario > saidas) {
+        dicasDiv.textContent = '✅ Muito bem! Você está com saldo positivo. Que tal guardar ou investir parte disso?';
       } else {
-        dica.textContent = '';
+        dicasDiv.textContent = '';
       }
     }
 
-    function atualizarGrafico(entradasTotal, saidas) {
-      if (grafico) grafico.destroy();
-      grafico = new Chart(ctx, {
+    function atualizarGraficos(entradasTotal, saidas, gastosPorCategoria) {
+      const isNoturno = document.body.classList.contains('noturno');
+      const textColor = isNoturno ? '#f1f5f9' : '#2f2f2f';
+
+      // Gráfico Principal (Entradas vs Saídas)
+      if (graficoPrincipal) graficoPrincipal.destroy();
+      graficoPrincipal = new Chart(graficoPizzaCtx, {
         type: 'doughnut',
         data: {
           labels: ['Entradas + Salário', 'Saídas'],
           datasets: [{
             data: [entradasTotal, saidas],
-            backgroundColor: ['#b2d8d8', '#ffc8dd'],
+            backgroundColor: ['#b2d8d8', '#ffc8dd'], // Cores claras
             hoverOffset: 20,
-            borderColor: 'transparent'
+            borderColor: isNoturno ? '#334155' : '#fffaf5', // Cor da borda do gráfico
+            borderWidth: 2
           }]
         },
         options: {
           responsive: true,
           plugins: {
             legend: {
-              position: 'bottom'
+              position: 'bottom',
+              labels: {
+                color: textColor // Cor do texto da legenda
+              }
             }
           }
         }
       });
+
+      // Gráfico de Categorias
+      const categoriasLabels = Object.keys(gastosPorCategoria);
+      const categoriasData = Object.values(gastosPorCategoria);
+
+      if (categoriasLabels.length > 0) {
+        graficoCategoriasContainer.style.display = 'block'; // Mostra o contêiner se houver dados
+        // Definindo as cores para as novas categorias
+        const categoryColors = {
+            'contas': '#FF6384', // Exemplo de cor para Contas
+            'emprestimos': '#36A2EB', // Exemplo de cor para Empréstimos
+            'compras': '#FFCD56', // Exemplo de cor para Compras
+            'dividas': '#4BC0C0', // Exemplo de cor para Dívidas
+            'cartoes': '#9966FF', // Exemplo de cor para Cartões
+            'outros': '#FF9F40' // Exemplo de cor para Outros
+        };
+        const backgroundColors = categoriasLabels.map(label => categoryColors[label] || '#CCCCCC'); // Cor padrão se não encontrada
+
+        if (graficoCategorias) graficoCategorias.destroy();
+        graficoCategorias = new Chart(graficoCategoriasCtx, {
+          type: 'doughnut',
+          data: {
+            labels: categoriasLabels,
+            datasets: [{
+              data: categoriasData,
+              backgroundColor: backgroundColors,
+              hoverOffset: 20,
+              borderColor: isNoturno ? '#334155' : '#fffaf5',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  color: textColor
+                }
+              }
+            }
+          }
+        });
+      } else {
+        graficoCategoriasContainer.style.display = 'none'; // Esconde se não houver dados
+      }
     }
 
-    // Initialize the view when the page loads
+    // --- Inicialização ---
+
+    // Popula o seletor de anos
+    const anoAtual = new Date().getFullYear();
+    for (let a = anoAtual - 5; a <= anoAtual + 5; a++) { // 5 anos para trás e 5 para frente
+      const option = document.createElement('option');
+      option.value = a;
+      option.textContent = a;
+      anoSelector.appendChild(option);
+    }
+    anoSelector.value = anoAtual; // Define o ano atual como padrão
+
+    // Define o mês atual como padrão
+    mesSelector.value = new Date().getMonth() + 1;
+
+    // Carrega o modo noturno se estiver salvo
+    if (localStorage.getItem('modoNoturno') === 'true') {
+      document.body.classList.add('noturno');
+      toggle.checked = true;
+    }
+
+    // Esconde a categoria no início
+    categoriaSelect.style.display = 'none';
+
+    // Atualiza a interface ao carregar a página
     atualizar();
   </script>
 </body>
