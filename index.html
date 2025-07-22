@@ -1,185 +1,448 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Controle Financeiro da Carol</title>
+  <meta charset="UTF-8" />
+  <title>💵</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Fonte estilosa fina -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap" rel="stylesheet" />
+
   <style>
+    :root {
+      --bg-light: #fdf6f0;
+      --bg-dark: #1e293b;
+      --text-light: #2f2f2f;
+      --text-dark: #f1f5f9;
+      --accent1: #b2d8d8;
+      --accent2: #ffc8dd;
+      --accent3: #fcefb4;
+      --box-bg-light: #fffaf5;
+      --box-bg-dark: #334155;
+    }
+
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f172a;
-      color: #f1f5f9;
-      padding: 2rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+      background: var(--bg-light);
+      color: var(--text-light);
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 1rem;
+      transition: all 0.3s ease-in-out;
     }
 
-    h1 {
-      margin-bottom: 2rem;
+    body.noturno {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 1300px;
+      padding: 0.5rem 1rem;
+      position: relative;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* selects mês e ano no topo */
+    #mesSelector, #anoSelector {
+      position: relative;
+      padding: 0.3rem 0.5rem;
+      border-radius: 0.5rem;
+      border: none;
+      font-weight: 300;
+      background-color: var(--box-bg-light);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+      font-size: 1rem;
+    }
+
+    body.noturno #mesSelector,
+    body.noturno #anoSelector {
+      background-color: var(--box-bg-dark);
+      color: white;
+    }
+
+    .modo-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .sobrou-topo {
+      background-color: var(--accent3);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: bold;
+      color: var(--text-light);
+      user-select: none;
+      max-width: 1300px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+    }
+
+    body.noturno .sobrou-topo {
+      background-color: #6f5e01;
+      color: var(--text-dark);
     }
 
     .wrapper {
       width: 100%;
       max-width: 1300px;
       display: flex;
+      flex-direction: row;
       gap: 2rem;
+      padding: 1rem;
     }
 
-    .form-area, .transactions-area {
-      background: #1e293b;
+    .form-area {
+      background: var(--box-bg-light);
+      padding: 1rem;
       border-radius: 1rem;
-      padding: 1.5rem;
-      flex: 1;
-      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+      flex: 0.6;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: all 0.3s ease-in-out;
     }
 
-    .form-area h2, .transactions-area h2 {
-      margin-top: 0;
-      color: #38bdf8;
+    body.noturno .form-area {
+      background: var(--box-bg-dark);
     }
 
     input, select {
-      width: 100%;
-      padding: 0.75rem;
-      margin: 0.5rem 0;
+      padding: 0.5rem;
       border: none;
       border-radius: 0.5rem;
-      background: #334155;
+      background: #f0f0f0;
+      font-size: 0.95rem;
+      font-weight: 300;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    body.noturno input,
+    body.noturno select {
+      background: #475569;
       color: white;
     }
 
     button {
-      width: 100%;
-      padding: 0.75rem;
-      margin-top: 1rem;
-      background: #22d3ee;
-      color: #0f172a;
-      font-weight: bold;
+      padding: 0.5rem;
+      background: var(--accent1);
       border: none;
       border-radius: 0.5rem;
+      font-weight: bold;
       cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
     }
 
-    button:hover {
-      background: #0ea5e9;
-    }
-
-    .transaction {
-      background: #334155;
-      padding: 0.75rem;
-      border-radius: 0.5rem;
-      margin-bottom: 0.5rem;
+    .summary {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-    }
-
-    .green { color: #22c55e; }
-    .red { color: #ef4444; }
-    .yellow { color: #eab308; }
-
-    .remove-btn {
-      background: none;
-      color: #f87171;
-      border: none;
-      cursor: pointer;
-    }
-
-    .summary, .dicas, .grafico {
-      margin-top: 1.5rem;
       padding: 1rem;
-      background: #0f172a;
       border-radius: 1rem;
-      border: 1px solid #334155;
+      width: 100%;
+      max-width: 1300px;
+      margin-top: 1rem;
+      gap: 1rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
     }
 
     .summary div {
       text-align: center;
+      flex: 1;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      font-weight: bold;
+    }
+
+    .summary div:nth-child(1) {
+      background-color: #e0f7fa; /* Saldo */
+    }
+
+    .summary div:nth-child(2) {
+      background-color: #d0f8ce; /* Entradas */
+    }
+
+    .summary div:nth-child(3) {
+      background-color: #ffcccb; /* Saídas */
+    }
+
+    .summary div:nth-child(4) {
+      background-color: #fff9c4; /* Salário */
+    }
+
+    .summary div:nth-child(5) {
+      background-color: #d1c4e9; /* Sobrou */
+    }
+
+    body.noturno .summary div:nth-child(1) {
+      background-color: #116b77;
+    }
+
+    body.noturno .summary div:nth-child(2) {
+      background-color: #33691e;
+    }
+
+    body.noturno .summary div:nth-child(3) {
+      background-color: #8b0000;
+    }
+
+    body.noturno .summary div:nth-child(4) {
+      background-color: #8d6e63;
+    }
+
+    body.noturno .summary div:nth-child(5) {
+      background-color: #5e35b1;
+    }
+
+    .transactions-area {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .transaction {
+      background: var(--box-bg-light);
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+    }
+
+    body.noturno .transaction {
+      background: var(--box-bg-dark);
     }
 
     .grafico canvas {
-      max-width: 100%;
+      max-height: 220px;
     }
 
     .dicas {
-      color: #facc15;
-      font-size: 1rem;
+      background: var(--box-bg-light);
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
     }
 
-    .transactions-list {
-      margin-top: 1rem;
-      max-height: 400px;
-      overflow-y: auto;
+    body.noturno .dicas {
+      background: var(--box-bg-dark);
     }
   </style>
 </head>
 <body>
+  <div class="top-bar">
+    <h1>💵</h1>
 
-  <h1>💵 Painel Financeiro Premium</h1>
+    <select id="mesSelector" aria-label="Selecionar mês">
+      <option value="1">Janeiro</option>
+      <option value="2">Fevereiro</option>
+      <option value="3">Março</option>
+      <option value="4">Abril</option>
+      <option value="5">Maio</option>
+      <option value="6">Junho</option>
+      <option value="7">Julho</option>
+      <option value="8">Agosto</option>
+      <option value="9">Setembro</option>
+      <option value="10">Outubro</option>
+      <option value="11">Novembro</option>
+      <option value="12">Dezembro</option>
+    </select>
+
+    <select id="anoSelector" aria-label="Selecionar ano"></select>
+
+    <label class="modo-toggle">
+      🌞<input type="checkbox" id="toggleModo" />🌙
+    </label>
+  </div>
+
+  <div class="sobrou-topo">
+    <label for="inputSobrouMes">Saldo que sobrou no mês anterior: R$ </label>
+    <input type="text" id="inputSobrouMes" placeholder="0,00" style="width:100px; text-align:center;" />
+    <button onclick="salvarSobrou()">Salvar</button>
+  </div>
+
+  <div class="summary">
+    <div><strong>Saldo</strong><br><span id="saldo">R$ 0,00</span></div>
+    <div><strong>Entradas</strong><br><span id="entradas">R$ 0,00</span></div>
+    <div><strong>Saídas</strong><br><span id="saidas">R$ 0,00</span></div>
+    <div><strong>Salário</strong><br><span id="salario">R$ 0,00</span></div>
+    <div><strong>Sobrou</strong><br><span id="sobrou">R$ 0,00</span></div>
+  </div>
 
   <div class="wrapper">
     <div class="form-area">
-      <h2>Adicionar Transação</h2>
-      <input type="text" id="descricao" placeholder="Descrição (ex: Mercado)">
-      <input type="text" id="valor" placeholder="Valor (ex: 2756,66)">
+      <input type="text" id="valor" placeholder="Valor (ex: 2756,66)" />
+      <input list="descricoes" id="descricao" placeholder="Descrição (ex: Nubank)" autocomplete="off" />
+      <datalist id="descricoes">
+        <option value="Nubank"></option>
+        <option value="Inter"></option>
+        <option value="Iphone 16 Pro"></option>
+        <option value="Santander"></option>
+        <option value="Shopee"></option>
+        <option value="Mercado Pago"></option>
+        <option value="Bradescard"></option>
+        <option value="Renner"></option>
+        <option value="Riachuelo"></option>
+      </datalist>
       <select id="tipo">
         <option value="entrada">Entrada</option>
         <option value="saida">Saída</option>
         <option value="salario">Salário</option>
       </select>
+      <input type="number" id="parcelas" placeholder="Parcelas (ex: 12)" min="1" max="36" />
       <button onclick="adicionar()">Adicionar</button>
     </div>
 
     <div class="transactions-area">
-      <h2>Transações</h2>
-      <div class="summary">
-        <div><strong>Saldo</strong><br><span id="saldo">R$ 0,00</span></div>
-        <div><strong class="green">Entradas</strong><br><span id="entradas">R$ 0,00</span></div>
-        <div><strong class="red">Saídas</strong><br><span id="saidas">R$ 0,00</span></div>
-        <div><strong class="yellow">Salário</strong><br><span id="salario">R$ 0,00</span></div>
-      </div>
-
       <div class="grafico">
         <canvas id="graficoPizza"></canvas>
       </div>
-
       <div class="dicas" id="dicas"></div>
-
       <div class="transactions-list" id="lista-transacoes"></div>
     </div>
   </div>
 
   <script>
+    const toggle = document.getElementById('toggleModo');
+    if (localStorage.getItem('modoNoturno') === 'true') {
+      document.body.classList.add('noturno');
+      toggle.checked = true;
+    }
+    toggle.addEventListener('change', () => {
+      document.body.classList.toggle('noturno');
+      localStorage.setItem('modoNoturno', toggle.checked);
+      atualizar();
+    });
+
+    const inputSobrouMes = document.getElementById('inputSobrouMes');
+    function salvarSobrou() {
+      let val = parseValor(inputSobrouMes.value.trim());
+      if (isNaN(val)) val = 0;
+      localStorage.setItem('sobrouMesAnterior', val);
+      atualizar();
+    }
+    inputSobrouMes.value = formatar(parseFloat(localStorage.getItem('sobrouMesAnterior')) || 0);
+
     let transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
 
     const ctx = document.getElementById('graficoPizza').getContext('2d');
     let grafico;
+
+    // Povoar o select ano: 2023 até 2030
+    const anoSelector = document.getElementById('anoSelector');
+    const anoAtual = new Date().getFullYear();
+    for(let a=anoAtual; a<=2030; a++) {
+      const option = document.createElement('option');
+      option.value = a;
+      option.textContent = a;
+      anoSelector.appendChild(option);
+    }
+
+    // Seleciona mês e ano atuais no carregamento
+    const mesSelector = document.getElementById('mesSelector');
+    mesSelector.value = new Date().getMonth() + 1;
+    anoSelector.value = anoAtual;
+
+    mesSelector.addEventListener('change', atualizar);
+    anoSelector.addEventListener('change', atualizar);
+
+    function getMesAnoAtual() {
+      return {
+        mes: Number(mesSelector.value),
+        ano: Number(anoSelector.value)
+      };
+    }
 
     function formatar(valor) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
     function parseValor(valorStr) {
-      return parseFloat(valorStr.replace(/\./g, '').replace(',', '.'));
+      if (!valorStr) return NaN;
+      let v = valorStr.replace(/[^\d,.-]/g, '');
+      v = v.replace(/\./g, '').replace(',', '.');
+      let n = parseFloat(v);
+      return n;
     }
 
     function adicionar() {
-      const descricao = document.getElementById('descricao').value.trim();
       const valorStr = document.getElementById('valor').value.trim();
+      const descricao = document.getElementById('descricao').value.trim();
       const tipo = document.getElementById('tipo').value;
+      const parcelas = parseInt(document.getElementById('parcelas').value.trim()) || 1;
 
-      if (!descricao || !valorStr) return alert('Preencha todos os campos.');
       const valor = parseValor(valorStr);
-      if (isNaN(valor)) return alert('Valor inválido.');
+      if (isNaN(valor) || valor <= 0) return alert('Valor inválido.');
 
-      const transacao = { descricao, valor, tipo };
-      transacoes.push(transacao);
+      // Se for salário, pode pular descrição, senão, descrição obrigatória
+      if (tipo !== 'salario' && !descricao) return alert('Descrição obrigatória.');
+
+      if (parcelas > 1 && tipo !== 'saida') {
+        alert('Parcelas só são permitidas para saídas.');
+        return;
+      }
+
+      const { mes, ano } = getMesAnoAtual();
+
+      if (parcelas > 1) {
+        for (let i = 0; i < parcelas; i++) {
+          let mesParcela = mes + i;
+          let anoParcela = ano;
+          if (mesParcela > 12) {
+            mesParcela -= 12;
+            anoParcela += 1;
+          }
+          transacoes.push({
+            tipo,
+            valor: +(valor / parcelas).toFixed(2),
+            descricao: `${descricao} (${i + 1}/${parcelas})`,
+            mes: mesParcela,
+            ano: anoParcela
+          });
+        }
+      } else {
+        transacoes.push({
+          tipo,
+          valor,
+          descricao: tipo === 'salario' ? 'Salário' : descricao,
+          mes,
+          ano
+        });
+      }
+
       localStorage.setItem('transacoes', JSON.stringify(transacoes));
 
-      document.getElementById('descricao').value = '';
       document.getElementById('valor').value = '';
+      document.getElementById('descricao').value = '';
+      document.getElementById('parcelas').value = '';
+
       atualizar();
     }
 
@@ -193,23 +456,23 @@
       const lista = document.getElementById('lista-transacoes');
       lista.innerHTML = '';
 
-      let total = 0, entradas = 0, saidas = 0, salarioTotal = 0;
+      const { mes, ano } = getMesAnoAtual();
 
-      transacoes.forEach((t, i) => {
+      const transacoesMes = transacoes.filter(t => t.mes === mes && t.ano === ano);
+
+      let total = 0, entradas = 0, saidas = 0, salarioTotal = 0;
+      const sobrouMesAnterior = parseFloat(localStorage.getItem('sobrouMesAnterior')) || 0;
+
+      transacoesMes.forEach((t, i) => {
         const div = document.createElement('div');
         div.className = 'transaction';
-
-        let cor = t.tipo === 'entrada' ? 'green' : t.tipo === 'saida' ? 'red' : 'yellow';
-        let prefixo = t.tipo === 'entrada' ? '💰' : t.tipo === 'saida' ? '🛒' : '💼';
-
         div.innerHTML = `
-          <div>${prefixo} ${t.descricao}</div>
+          <div>${t.descricao}</div>
           <div>
-            <strong class="${cor}">${formatar(t.valor)}</strong>
-            <button class="remove-btn" onclick="remover(${i})">✕</button>
+            <strong>${formatar(t.valor)}</strong>
+            <button onclick="remover(${i})">✕</button>
           </div>
         `;
-
         lista.appendChild(div);
 
         if (t.tipo === 'entrada') {
@@ -224,42 +487,55 @@
         }
       });
 
+      total = sobrouMesAnterior + entradas + salarioTotal - saidas;
+
       document.getElementById('saldo').textContent = formatar(total);
       document.getElementById('entradas').textContent = formatar(entradas);
       document.getElementById('saidas').textContent = formatar(saidas);
       document.getElementById('salario').textContent = formatar(salarioTotal);
+      document.getElementById('sobrou').textContent = formatar(sobrouMesAnterior);
 
       mostrarDicas(total, entradas, saidas, salarioTotal);
-      atualizarGrafico(entradas, saidas, salarioTotal);
+      atualizarGrafico(entradas + salarioTotal, saidas);
     }
 
     function mostrarDicas(saldo, entradas, saidas, salario) {
       const dica = document.getElementById('dicas');
       if (saldo < 0) {
-        dica.textContent = "🚨 Cuidado! Você está no vermelho. Reveja suas saídas e priorize o essencial.";
+        dica.textContent = '🚨 Cuidado! Você está no vermelho. Reveja suas saídas e priorize o essencial.';
       } else if (salario > entradas) {
-        dica.textContent = "📌 Dica: Você está dependendo só do salário. Considere buscar fontes extras de renda.";
+        dica.textContent = '📌 Dica: Você está dependendo só do salário. Considere buscar fontes extras de renda.';
       } else if (saldo > 0 && entradas > saidas) {
-        dica.textContent = "✅ Muito bem! Você está com saldo positivo. Que tal guardar ou investir parte disso?";
+        dica.textContent = '✅ Muito bem! Você está com saldo positivo. Que tal guardar ou investir parte disso?';
       } else {
-        dica.textContent = "";
+        dica.textContent = '';
       }
     }
 
-    function atualizarGrafico(entradas, saidas, salario) {
+    function atualizarGrafico(entradasTotal, saidas) {
       if (grafico) grafico.destroy();
       grafico = new Chart(ctx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
-          labels: ['Entradas', 'Saídas', 'Salário'],
+          labels: ['Entradas + Salário', 'Saídas'],
           datasets: [{
-            label: 'Distribuição',
-            data: [entradas, saidas, salario],
-            backgroundColor: ['#22c55e', '#ef4444', '#eab308'],
+            data: [entradasTotal, saidas],
+            backgroundColor: ['#b2d8d8', '#ffc8dd'],
+            hoverOffset: 20,
+            borderColor: 'transparent'
           }]
         },
         options: {
-          responsive: true
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: document.body.classList.contains('noturno') ? '#eee' : '#222',
+                font: { size: 12, weight: 'bold' }
+              }
+            }
+          }
         }
       });
     }
