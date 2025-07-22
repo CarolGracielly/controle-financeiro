@@ -1,169 +1,161 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Controle Financeiro</title>
+  <meta charset="UTF-8">
+  <title>Controle Financeiro da Carol</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background-color: #111827;
-      color: #f3f4f6;
+      background: #0f172a;
+      color: #f1f5f9;
+      padding: 2rem;
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 2rem;
-    }
-
-    .container {
-      background: #1f2937;
-      border-radius: 16px;
-      padding: 2rem;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      flex-direction: column;
+      align-items: center;
     }
 
     h1 {
-      text-align: center;
-      margin-bottom: 1rem;
-      font-size: 1.8rem;
-      color: #f9fafb;
+      margin-bottom: 2rem;
     }
 
-    .input-group {
-      margin-bottom: 1rem;
+    .wrapper {
+      width: 100%;
+      max-width: 1300px;
+      display: flex;
+      gap: 2rem;
     }
 
-    .input-group input {
+    .form-area, .transactions-area {
+      background: #1e293b;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      flex: 1;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    .form-area h2, .transactions-area h2 {
+      margin-top: 0;
+      color: #38bdf8;
+    }
+
+    input, select {
       width: 100%;
       padding: 0.75rem;
-      border-radius: 8px;
+      margin: 0.5rem 0;
       border: none;
-      margin-bottom: 0.5rem;
-      background-color: #374151;
-      color: #fff;
+      border-radius: 0.5rem;
+      background: #334155;
+      color: white;
     }
 
     button {
       width: 100%;
       padding: 0.75rem;
+      margin-top: 1rem;
+      background: #22d3ee;
+      color: #0f172a;
+      font-weight: bold;
       border: none;
-      border-radius: 8px;
-      background-color: #06b6d4;
-      color: white;
-      font-size: 1rem;
+      border-radius: 0.5rem;
       cursor: pointer;
     }
 
     button:hover {
-      background-color: #0891b2;
+      background: #0ea5e9;
     }
 
-    .tabs {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .tabs button {
-      flex: 1;
-      background: none;
-      border: none;
-      color: #9ca3af;
-      padding: 0.5rem;
-      cursor: pointer;
-    }
-
-    .tabs button.active {
-      color: #f3f4f6;
-      border-bottom: 2px solid #06b6d4;
-    }
-
-    .summary {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-
-    .summary div {
-      text-align: center;
-    }
-
-    .green {
-      color: #10b981;
-    }
-
-    .red {
-      color: #ef4444;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    li {
-      background-color: #374151;
-      border-radius: 8px;
+    .transaction {
+      background: #334155;
       padding: 0.75rem;
+      border-radius: 0.5rem;
       margin-bottom: 0.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    li .desc {
-      display: flex;
-      gap: 0.5rem;
-    }
+    .green { color: #22c55e; }
+    .red { color: #ef4444; }
+    .yellow { color: #eab308; }
 
-    li button {
+    .remove-btn {
       background: none;
+      color: #f87171;
       border: none;
-      color: #9ca3af;
       cursor: pointer;
     }
 
-    canvas {
-      margin-top: 2rem;
+    .summary, .dicas, .grafico {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #0f172a;
+      border-radius: 1rem;
+      border: 1px solid #334155;
     }
 
+    .summary div {
+      text-align: center;
+    }
+
+    .grafico canvas {
+      max-width: 100%;
+    }
+
+    .dicas {
+      color: #facc15;
+      font-size: 1rem;
+    }
+
+    .transactions-list {
+      margin-top: 1rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>💸 Controle Financeiro</h1>
-    <div class="input-group">
-      <input id="desc" placeholder="Descrição (ex: Salário ou Mercado)" />
-      <input id="amount" placeholder="Valor (ex: 2.756,66)" />
-    </div>
-    <button onclick="addTransaction()">Adicionar</button>
 
-    <div class="tabs">
-      <button onclick="changeTab('todos')" id="tab-todos" class="active">Todos</button>
-      <button onclick="changeTab('entrada')" id="tab-entrada">Entradas</button>
-      <button onclick="changeTab('saida')" id="tab-saida">Saídas</button>
-    </div>
+  <h1>💵 Painel Financeiro Premium</h1>
 
-    <div class="summary">
-      <div><strong>Saldo</strong><br><span id="saldo">R$ 0,00</span></div>
-      <div><strong class="green">Receitas</strong><br><span id="entradas">R$ 0,00</span></div>
-      <div><strong class="red">Despesas</strong><br><span id="saidas">R$ 0,00</span></div>
+  <div class="wrapper">
+    <div class="form-area">
+      <h2>Adicionar Transação</h2>
+      <input type="text" id="descricao" placeholder="Descrição (ex: Mercado)">
+      <input type="text" id="valor" placeholder="Valor (ex: 2756,66)">
+      <select id="tipo">
+        <option value="entrada">Entrada</option>
+        <option value="saida">Saída</option>
+        <option value="salario">Salário</option>
+      </select>
+      <button onclick="adicionar()">Adicionar</button>
     </div>
 
-    <ul id="lista-transacoes"></ul>
+    <div class="transactions-area">
+      <h2>Transações</h2>
+      <div class="summary">
+        <div><strong>Saldo</strong><br><span id="saldo">R$ 0,00</span></div>
+        <div><strong class="green">Entradas</strong><br><span id="entradas">R$ 0,00</span></div>
+        <div><strong class="red">Saídas</strong><br><span id="saidas">R$ 0,00</span></div>
+        <div><strong class="yellow">Salário</strong><br><span id="salario">R$ 0,00</span></div>
+      </div>
 
-    <canvas id="grafico" height="200"></canvas>
+      <div class="grafico">
+        <canvas id="graficoPizza"></canvas>
+      </div>
+
+      <div class="dicas" id="dicas"></div>
+
+      <div class="transactions-list" id="lista-transacoes"></div>
+    </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    let transactions = JSON.parse(localStorage.getItem('transacoes')) || [];
-    let currentTab = 'todos';
+    let transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
+
+    const ctx = document.getElementById('graficoPizza').getContext('2d');
+    let grafico;
 
     function formatar(valor) {
       return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -173,35 +165,27 @@
       return parseFloat(valorStr.replace(/\./g, '').replace(',', '.'));
     }
 
-    function salvar() {
-      localStorage.setItem('transacoes', JSON.stringify(transactions));
-    }
+    function adicionar() {
+      const descricao = document.getElementById('descricao').value.trim();
+      const valorStr = document.getElementById('valor').value.trim();
+      const tipo = document.getElementById('tipo').value;
 
-    function addTransaction() {
-      const desc = document.getElementById('desc').value.trim();
-      const valorStr = document.getElementById('amount').value.trim();
-      if (!desc || !valorStr) return alert('Preencha todos os campos.');
-
+      if (!descricao || !valorStr) return alert('Preencha todos os campos.');
       const valor = parseValor(valorStr);
       if (isNaN(valor)) return alert('Valor inválido.');
 
-      transactions.push({ desc, valor });
-      salvar();
-      document.getElementById('desc').value = '';
-      document.getElementById('amount').value = '';
+      const transacao = { descricao, valor, tipo };
+      transacoes.push(transacao);
+      localStorage.setItem('transacoes', JSON.stringify(transacoes));
+
+      document.getElementById('descricao').value = '';
+      document.getElementById('valor').value = '';
       atualizar();
     }
 
     function remover(index) {
-      transactions.splice(index, 1);
-      salvar();
-      atualizar();
-    }
-
-    function changeTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(`tab-${tab}`).classList.add('active');
+      transacoes.splice(index, 1);
+      localStorage.setItem('transacoes', JSON.stringify(transacoes));
       atualizar();
     }
 
@@ -209,62 +193,73 @@
       const lista = document.getElementById('lista-transacoes');
       lista.innerHTML = '';
 
-      let saldo = 0;
-      let entradas = 0;
-      let saidas = 0;
+      let total = 0, entradas = 0, saidas = 0, salarioTotal = 0;
 
-      transactions.forEach((t, i) => {
-        if (currentTab === 'entrada' && t.valor < 0) return;
-        if (currentTab === 'saida' && t.valor >= 0) return;
+      transacoes.forEach((t, i) => {
+        const div = document.createElement('div');
+        div.className = 'transaction';
 
-        const li = document.createElement('li');
-        const spanDesc = document.createElement('span');
-        spanDesc.className = 'desc';
-        spanDesc.innerHTML = `${t.valor >= 0 ? '💰' : '🛒'} ${t.desc}`;
+        let cor = t.tipo === 'entrada' ? 'green' : t.tipo === 'saida' ? 'red' : 'yellow';
+        let prefixo = t.tipo === 'entrada' ? '💰' : t.tipo === 'saida' ? '🛒' : '💼';
 
-        const spanValor = document.createElement('span');
-        spanValor.innerHTML = `<strong class="${t.valor >= 0 ? 'green' : 'red'}">${formatar(t.valor)}</strong>`;
+        div.innerHTML = `
+          <div>${prefixo} ${t.descricao}</div>
+          <div>
+            <strong class="${cor}">${formatar(t.valor)}</strong>
+            <button class="remove-btn" onclick="remover(${i})">✕</button>
+          </div>
+        `;
 
-        const btn = document.createElement('button');
-        btn.textContent = '✕';
-        btn.onclick = () => remover(i);
+        lista.appendChild(div);
 
-        li.appendChild(spanDesc);
-        li.appendChild(spanValor);
-        li.appendChild(btn);
-        lista.appendChild(li);
-
-        saldo += t.valor;
-        if (t.valor >= 0) entradas += t.valor;
-        else saidas += t.valor;
+        if (t.tipo === 'entrada') {
+          total += t.valor;
+          entradas += t.valor;
+        } else if (t.tipo === 'saida') {
+          total -= t.valor;
+          saidas += t.valor;
+        } else if (t.tipo === 'salario') {
+          total += t.valor;
+          salarioTotal += t.valor;
+        }
       });
 
-      document.getElementById('saldo').textContent = formatar(saldo);
+      document.getElementById('saldo').textContent = formatar(total);
       document.getElementById('entradas').textContent = formatar(entradas);
-      document.getElementById('saidas').textContent = formatar(Math.abs(saidas));
+      document.getElementById('saidas').textContent = formatar(saidas);
+      document.getElementById('salario').textContent = formatar(salarioTotal);
 
-      gerarGrafico(entradas, Math.abs(saidas));
+      mostrarDicas(total, entradas, saidas, salarioTotal);
+      atualizarGrafico(entradas, saidas, salarioTotal);
     }
 
-    let grafico;
+    function mostrarDicas(saldo, entradas, saidas, salario) {
+      const dica = document.getElementById('dicas');
+      if (saldo < 0) {
+        dica.textContent = "🚨 Cuidado! Você está no vermelho. Reveja suas saídas e priorize o essencial.";
+      } else if (salario > entradas) {
+        dica.textContent = "📌 Dica: Você está dependendo só do salário. Considere buscar fontes extras de renda.";
+      } else if (saldo > 0 && entradas > saidas) {
+        dica.textContent = "✅ Muito bem! Você está com saldo positivo. Que tal guardar ou investir parte disso?";
+      } else {
+        dica.textContent = "";
+      }
+    }
 
-    function gerarGrafico(receitas, despesas) {
-      const ctx = document.getElementById('grafico').getContext('2d');
+    function atualizarGrafico(entradas, saidas, salario) {
       if (grafico) grafico.destroy();
-
       grafico = new Chart(ctx, {
-        type: 'doughnut',
+        type: 'pie',
         data: {
-          labels: ['Receitas', 'Despesas'],
+          labels: ['Entradas', 'Saídas', 'Salário'],
           datasets: [{
-            data: [receitas, despesas],
-            backgroundColor: ['#10b981', '#ef4444']
+            label: 'Distribuição',
+            data: [entradas, saidas, salario],
+            backgroundColor: ['#22c55e', '#ef4444', '#eab308'],
           }]
         },
         options: {
-          plugins: {
-            legend: { position: 'bottom', labels: { color: '#fff' } }
-          }
+          responsive: true
         }
       });
     }
